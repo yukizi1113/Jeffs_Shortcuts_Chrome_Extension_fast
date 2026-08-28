@@ -27,6 +27,16 @@ function main() {
             ]
         };
     }
+    
+    function macTextAppCondition() {
+        return {
+            type: 'frontmost_application_if',
+            bundle_identifiers: [
+                '^com\\.apple\\.TextEdit$',
+                '^com\\.apple\\.Notes$'
+            ]
+        };
+    }
 
 
 function jeffBrowserCondition() {
@@ -48,6 +58,37 @@ function jeffBrowserCondition() {
     }
 
     var manipulators = [];
+
+//
+// macOS テキスト系アプリ：
+// Windows Ctrl + Shift + V
+// → macOS「ペーストしてスタイルを合わせる」
+// Command + Option + Shift + V
+//
+manipulators.unshift({
+    type: 'basic',
+    from: {
+        key_code: 'v',
+        modifiers: {
+            mandatory: ['control', 'shift'],
+            optional: ['caps_lock']
+        }
+    },
+    to: [
+        {
+            key_code: 'v',
+            modifiers: [
+                'left_command',
+                'left_option',
+                'left_shift'
+            ]
+        }
+    ],
+    conditions: [
+        deviceCondition(),
+        macTextAppCondition()
+    ]
+});
 
     //
     // 1. Alt + Tab → Windowsと同じアプリ切り替え

@@ -63,6 +63,7 @@ Jeff's Sheets modeがONの間は、対象キーボードからのJeff用ショ�
 
 - `Alt + Tab`: アプリ切替
 - `Ctrl + C/V/X/Z/A/S/F/P` など: macOSのCommandショートカットへ変換
+- TextEdit／メモの `Ctrl + Shift + V`: 「ペーストしてスタイルを合わせる」（`Command + Option + Shift + V`）へ変換
 - Finderの `Ctrl + X` → `Ctrl + V`: ファイル移動
 - Finderの `Enter`: 開く
 - Finderの `F2`: 名前変更

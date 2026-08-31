@@ -45,23 +45,23 @@ Chrome拡張がキー入力を直接受け取り、Google Sheets API v4を呼び
 
 設定ファイル: [`karabiner/Y-U0036-windows-like-shortcuts.js`](karabiner/Y-U0036-windows-like-shortcuts.js)
 
-このファイルは、現在のKarabiner-Elements構成で使われている `eval_js` 形式のJavaScriptルールです。Y-U0036キーボードだけに適用される `device_if` 条件を含みます。
+このファイルは、現在のKarabiner-Elements構成で使われている `eval_js` 形式のJavaScriptルールです。Logitech Y-U0036（`vendor_id=1133`、`product_id=49995`）だけに適用される `device_if` 条件を含みます。
 
 ### 設定方法
 
-1. Karabiner-EventViewerを開き、対象キーボードの `vendor_id` と `product_id` を確認します。
-2. 設定ファイル冒頭の `VENDOR_ID` と `PRODUCT_ID` が実機の値と異なる場合は、自分の環境用コピーで値を変更します。
-3. Karabiner-ElementsのComplex ModificationsでJavaScriptルールを追加し、ファイル全体を `eval_js` の内容として登録します。
-4. `Y-U0036 - Windows-like shortcuts` ルールを有効にします。
-5. ChromeでGoogleスプレッドシートを使うときは、`Ctrl + Option + Shift + 0` で **Jeff's Sheets mode** をONにします。同じキーでもう一度押すとOFFになります。
-
-> 設定ファイル内の説明コメントにはF12と書かれている箇所がありますが、現在の実装上の切替キーは `Ctrl + Option + Shift + 0` です。
+1. Karabiner-EventViewerを開き、対象キーボードが `vendor_id=1133`、`product_id=49995` と認識されていることを確認します。
+2. Karabiner-ElementsのComplex ModificationsでJavaScriptルールを追加し、設定ファイル全体を `eval_js` の内容として登録します。
+3. `Y-U0036 - Windows-like shortcuts` ルールを有効にします。
+4. ChromeでGoogleスプレッドシートを使うときは、`Ctrl + Option + Shift + 0` で **Jeff's Sheets mode** をONにします。同じキーでもう一度押すとOFFになります。
 
 Jeff's Sheets modeがONの間は、対象キーボードからのJeff用ショートカットをControl / Option / ShiftのままChromeへ渡します。OFFの間は、通常のWindows風Ctrl→Command変換が優先されます。Jeffモードの対象ブラウザはChromeです。
+
+URL判定やExcelマクロ実行にAppleScriptを使用するため、初回実行時にKarabiner-ElementsからSystem Events、Google Chrome、またはMicrosoft Excelを操作する権限をmacOSから求められる場合があります。
 
 ### Karabiner設定に含まれる主なWindows風操作
 
 - `Alt + Tab`: アプリ切替
+- Altを単独で押して離す: 2秒間のWindows風KeyTips入力待ちを開始
 - `Ctrl + C/V/X/Z/A/S/F/P` など: macOSのCommandショートカットへ変換（Microsoft Excelを除く）
 - TextEdit／メモの `Ctrl + Shift + V`: 「ペーストしてスタイルを合わせる」（`Command + Option + Shift + V`）へ変換
 - Finderの `Ctrl + X` → `Ctrl + V`: ファイル移動
@@ -75,17 +75,30 @@ Jeff's Sheets modeがONの間は、対象キーボードからのJeff用ショ�
 - `Print Screen`: 画面全体をクリップボードへ保存
 - Chrome / Edgeの `F5`: 再読み込み
 - Chrome / Edgeの `F12`: DevTools
-- Jeffモード中の `Ctrl + 矢印`: Googleスプレッドシートのデータ領域端へ移動
+
+## Googleスプレッドシート用のKarabiner操作
+
+次の操作は、Chrome前面かつJeff's Sheets modeがONの場合に有効です。
+
+| Windows風ショートカット | Googleスプレッドシートでの動作 | その他のChromeページ |
+|---|---|---|
+| `Ctrl + 矢印` | データ領域の端まで移動 | Command＋矢印として処理 |
+| `Ctrl + PageUp` | 前のシートへ移動（`Option + ↑`） | 前のChromeタブ（`Ctrl + Shift + Tab`） |
+| `Ctrl + PageDown` | 次のシートへ移動（`Option + ↓`） | 次のChromeタブ（`Ctrl + Tab`） |
+| `Alt + ↓` | フィルターのドロップダウンを開く（`Ctrl + Command + R`） | 通常の `Option + ↓` |
+
+> 設定内にはGoogleスプレッドシートの `Alt + 1` をChrome拡張側で `PRECEDENT` として処理する予定のコメントがありますが、現在の `content.js` には `Alt + 1` の割り当てがないため、現時点では利用できません。また、`Alt → A → T` のSheets用 `FILTER_TOGGLE` もコメント上の拡張予定であり、現在のKarabinerルールはExcelだけを対象にしています。
 
 ## Excel for Mac専用のKarabiner設定
 
-今回の設定には、Y-U0036とMicrosoft Excelを同時に使用している場合だけ有効になるルールが含まれます。
+次のルールは、Y-U0036とMicrosoft Excelを同時に使用している場合だけ有効です。
 
 | Windows風ショートカット | Excelへ送られる操作 | 用途 |
 |---|---|---|
 | `Alt + 1` | `Ctrl + Shift + Y` | `QAT_TracePrecedents`（参照元のトレース） |
 | `Alt + 2` | `Ctrl + Shift + G` | `QAT_TraceDependents`（参照先のトレース） |
 | `Alt + 3` | `Ctrl + Shift + X` | `QAT_ClearArrows`（トレース矢印を削除） |
+| `Alt`を離す → `A` → `T` | `Ctrl + Shift + L` | オートフィルターの追加／解除 |
 | `Ctrl + 矢印` | `Command + 矢印` | データ領域の端まで移動 |
 | `Ctrl + Shift + 矢印` | `Command + Shift + 矢印` | データ領域の端まで範囲選択 |
 | `Ctrl + Alt + W` | AppleScript経由でVBAマクロを実行 | `DefaultSquareWidth` |
@@ -97,7 +110,6 @@ Jeff's Sheets modeがONの間は、対象キーボードからのJeff用ショ�
 - `Ctrl + Alt + W` と `Ctrl + Shift + Alt + F`を使うには、Excelから実行できる `DefaultSquareWidth` と `SetToDefaultFont` という名前のVBAマクロが必要です。
 - AppleScriptからExcelを操作するため、初回実行時にmacOSのオートメーション権限を求められる場合があります。
 - Excelでは一般的なCtrl→Command変換を行いません。Excel専用ルールとして定義された操作以外は、元のControlキー入力がExcelへ送られます。
-
 ## ショートカット一覧
 
 `Ctrl` はControl、`Alt` はOption、`Cmd` はCommandを表します。

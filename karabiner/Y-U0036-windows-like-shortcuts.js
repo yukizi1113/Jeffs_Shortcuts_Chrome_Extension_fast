@@ -27,6 +27,24 @@ function main() {
             ]
         };
     }
+
+function excelUnlessCondition() {
+    return {
+        type: 'frontmost_application_unless',
+        bundle_identifiers: [
+            '^com\\.microsoft\\.Excel$'
+        ]
+    };
+}
+
+function excelCondition() {
+    return {
+        type: 'frontmost_application_if',
+        bundle_identifiers: [
+            '^com\\.microsoft\\.Excel$'
+        ]
+    };
+}    
     
     function macTextAppCondition() {
         return {
@@ -58,6 +76,203 @@ function jeffBrowserCondition() {
     }
 
     var manipulators = [];
+
+//
+// ============================================================
+// Excel for Mac - Windows QAT Alt+1 / Alt+2 / Alt+3
+// Y-U0036 + Microsoft Excel のときだけ有効
+// ============================================================
+//
+
+// Alt + 1 → Ctrl + Shift + Y
+// → QAT_TracePrecedents
+manipulators.unshift({
+    type: 'basic',
+    from: {
+        key_code: '1',
+        modifiers: {
+            mandatory: ['option'],
+            optional: ['caps_lock']
+        }
+    },
+    to: [
+        {
+            key_code: 'y',
+            modifiers: ['left_control', 'left_shift']
+        }
+    ],
+    conditions: [
+        deviceCondition(),
+        excelCondition()
+    ]
+});
+
+// Alt + 2 → Ctrl + Shift + G
+// → QAT_TraceDependents
+manipulators.unshift({
+    type: 'basic',
+    from: {
+        key_code: '2',
+        modifiers: {
+            mandatory: ['option'],
+            optional: ['caps_lock']
+        }
+    },
+    to: [
+        {
+            key_code: 'g',
+            modifiers: ['left_control', 'left_shift']
+        }
+    ],
+    conditions: [
+        deviceCondition(),
+        excelCondition()
+    ]
+});
+
+// Alt + 3 → Ctrl + Shift + X
+// → QAT_ClearArrows
+manipulators.unshift({
+    type: 'basic',
+    from: {
+        key_code: '3',
+        modifiers: {
+            mandatory: ['option'],
+            optional: ['caps_lock']
+        }
+    },
+    to: [
+        {
+            key_code: 'x',
+            modifiers: ['left_control', 'left_shift']
+        }
+    ],
+    conditions: [
+        deviceCondition(),
+        excelCondition()
+    ]
+});
+
+
+//
+// ============================================================
+// Excel for Mac：Windows風 Ctrl + Arrow
+// ============================================================
+// Y-U0036 + Microsoft Excel のときだけ有効
+//
+
+function addExcelCtrlArrow(key) {
+
+    // Ctrl + Arrow
+    // → Command + Arrow
+    manipulators.push({
+        type: 'basic',
+        from: {
+            key_code: key,
+            modifiers: {
+                mandatory: ['control'],
+                optional: ['caps_lock']
+            }
+        },
+        to: [
+            {
+                key_code: key,
+                modifiers: ['left_command']
+            }
+        ],
+        conditions: [
+            deviceCondition(),
+            excelCondition()
+        ]
+    });
+
+    // Ctrl + Shift + Arrow
+    // → Command + Shift + Arrow
+    // Windows同様「データ端まで範囲選択」
+    manipulators.push({
+        type: 'basic',
+        from: {
+            key_code: key,
+            modifiers: {
+                mandatory: ['control', 'shift'],
+                optional: ['caps_lock']
+            }
+        },
+        to: [
+            {
+                key_code: key,
+                modifiers: ['left_command', 'left_shift']
+            }
+        ],
+        conditions: [
+            deviceCondition(),
+            excelCondition()
+        ]
+    });
+}
+
+addExcelCtrlArrow('up_arrow');
+addExcelCtrlArrow('down_arrow');
+addExcelCtrlArrow('left_arrow');
+addExcelCtrlArrow('right_arrow');
+
+
+// ============================================================
+// Excel for Mac - Jeff Alt shortcuts
+// ============================================================
+// Y-U0036 + Microsoft Excel のときだけ有効
+//
+
+//
+// Ctrl + Alt + W
+// → Jeff: DefaultSquareWidth
+//
+manipulators.unshift({
+    type: 'basic',
+    from: {
+        key_code: 'w',
+        modifiers: {
+            mandatory: ['control', 'option'],
+            optional: ['caps_lock']
+        }
+    },
+    to: [
+        {
+            shell_command:
+                "/usr/bin/osascript -e 'tell application \"Microsoft Excel\" to run VB macro \"DefaultSquareWidth\"'"
+        }
+    ],
+    conditions: [
+        deviceCondition(),
+        excelCondition()
+    ]
+});
+
+
+//
+// Ctrl + Shift + Alt + F
+// → Jeff: SetToDefaultFont
+//
+manipulators.unshift({
+    type: 'basic',
+    from: {
+        key_code: 'f',
+        modifiers: {
+            mandatory: ['control', 'shift', 'option'],
+            optional: ['caps_lock']
+        }
+    },
+    to: [
+        {
+            shell_command:
+                "/usr/bin/osascript -e 'tell application \"Microsoft Excel\" to run VB macro \"SetToDefaultFont\"'"
+        }
+    ],
+    conditions: [
+        deviceCondition(),
+        excelCondition()
+    ]
+});
 
 //
 // macOS テキスト系アプリ：
@@ -178,7 +393,8 @@ manipulators.unshift({
                 }
             ],
             conditions: [
-                deviceCondition()
+                deviceCondition(),
+                excelUnlessCondition()
             ]
         });
     });

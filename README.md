@@ -62,7 +62,7 @@ Jeff's Sheets modeがONの間は、対象キーボードからのJeff用ショ�
 ### Karabiner設定に含まれる主なWindows風操作
 
 - `Alt + Tab`: アプリ切替
-- `Ctrl + C/V/X/Z/A/S/F/P` など: macOSのCommandショートカットへ変換
+- `Ctrl + C/V/X/Z/A/S/F/P` など: macOSのCommandショートカットへ変換（Microsoft Excelを除く）
 - TextEdit／メモの `Ctrl + Shift + V`: 「ペーストしてスタイルを合わせる」（`Command + Option + Shift + V`）へ変換
 - Finderの `Ctrl + X` → `Ctrl + V`: ファイル移動
 - Finderの `Enter`: 開く
@@ -76,6 +76,27 @@ Jeff's Sheets modeがONの間は、対象キーボードからのJeff用ショ�
 - Chrome / Edgeの `F5`: 再読み込み
 - Chrome / Edgeの `F12`: DevTools
 - Jeffモード中の `Ctrl + 矢印`: Googleスプレッドシートのデータ領域端へ移動
+
+## Excel for Mac専用のKarabiner設定
+
+今回の設定には、Y-U0036とMicrosoft Excelを同時に使用している場合だけ有効になるルールが含まれます。
+
+| Windows風ショートカット | Excelへ送られる操作 | 用途 |
+|---|---|---|
+| `Alt + 1` | `Ctrl + Shift + Y` | `QAT_TracePrecedents`（参照元のトレース） |
+| `Alt + 2` | `Ctrl + Shift + G` | `QAT_TraceDependents`（参照先のトレース） |
+| `Alt + 3` | `Ctrl + Shift + X` | `QAT_ClearArrows`（トレース矢印を削除） |
+| `Ctrl + 矢印` | `Command + 矢印` | データ領域の端まで移動 |
+| `Ctrl + Shift + 矢印` | `Command + Shift + 矢印` | データ領域の端まで範囲選択 |
+| `Ctrl + Alt + W` | AppleScript経由でVBAマクロを実行 | `DefaultSquareWidth` |
+| `Ctrl + Shift + Alt + F` | AppleScript経由でVBAマクロを実行 | `SetToDefaultFont` |
+
+### Excel側の準備
+
+- `Alt + 1`〜`Alt + 3`を使うには、Excel側で対応するQAT／マクロ用ショートカット（`Ctrl + Shift + Y/G/X`）が有効になっている必要があります。
+- `Ctrl + Alt + W` と `Ctrl + Shift + Alt + F`を使うには、Excelから実行できる `DefaultSquareWidth` と `SetToDefaultFont` という名前のVBAマクロが必要です。
+- AppleScriptからExcelを操作するため、初回実行時にmacOSのオートメーション権限を求められる場合があります。
+- Excelでは一般的なCtrl→Command変換を行いません。Excel専用ルールとして定義された操作以外は、元のControlキー入力がExcelへ送られます。
 
 ## ショートカット一覧
 

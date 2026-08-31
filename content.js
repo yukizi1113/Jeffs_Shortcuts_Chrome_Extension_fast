@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  console.info('[Jeff Fast] content v0.7 loaded');
+  console.info('[Jeff Fast] content v0.9 loaded');
 
   // Jeff shortcut map. Primarily uses Control/Option/Shift.
   // Command+Shift+V is also accepted for plain-paste coexistence.
@@ -15,6 +15,7 @@
     ['C+S+Digit1', 'EXCEL_NUMBER'],
     ['C+S+Digit5', 'EXCEL_PERCENT'],
     ['C+BracketLeft', 'PRECEDENT'],
+    ['A+Digit1', 'PRECEDENT'],
     ['C+S+KeyS', '17'],
     ['C+S+KeyD', '18'],
     ['C+A+KeyD', '19'],
@@ -61,6 +62,119 @@
   let queueRunning = false;
   let bridgePrefix = null;
   let bridgePrefixAt = 0;
+
+// ============================================================
+// Google Sheets: Windows Excel風 Alt -> A -> T
+// ============================================================
+
+let excelAltDown = false;
+let excelAltUsedWithOtherKey = false;
+let excelKeyTipStage = null;
+let excelKeyTipAt = 0;
+
+function resetExcelKeyTips() {
+    excelKeyTipStage = null;
+    excelKeyTipAt = 0;
+}
+
+function maybeHandleExcelAltAT(e) {
+
+    const isAlt =
+        e.code === 'AltLeft' ||
+        e.code === 'AltRight';
+
+    if (isAlt) {
+        if (!e.repeat) {
+            excelAltDown = true;
+            excelAltUsedWithOtherKey = false;
+        }
+        return false;
+    }
+
+    // Altを押しながら別キーを使った場合は
+    // Alt単独押下とはみなさない
+    if (excelAltDown) {
+        excelAltUsedWithOtherKey = true;
+    }
+
+    if (shouldIgnoreShortcut()) {
+        resetExcelKeyTips();
+        return false;
+    }
+
+    const now = performance.now();
+
+    if (
+        excelKeyTipStage &&
+        now - excelKeyTipAt > 2000
+    ) {
+        resetExcelKeyTips();
+    }
+
+    // Altを離した後の A
+    if (
+        excelKeyTipStage === 'ALT' &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.shiftKey &&
+        !e.metaKey &&
+        e.code === 'KeyA'
+    ) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        excelKeyTipStage = 'ALT_A';
+        excelKeyTipAt = now;
+
+        return true;
+    }
+
+    // Alt -> A の後の T
+    if (
+        excelKeyTipStage === 'ALT_A' &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.shiftKey &&
+        !e.metaKey &&
+        e.code === 'KeyT'
+    ) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        resetExcelKeyTips();
+
+        runCommand('FILTER_TOGGLE');
+
+        return true;
+    }
+
+    return false;
+}
+
+
+// Altを単独で押して離したことを検出
+window.addEventListener('keyup', (e) => {
+
+    const isAlt =
+        e.code === 'AltLeft' ||
+        e.code === 'AltRight';
+
+    if (!isAlt) return;
+
+    if (
+        excelAltDown &&
+        !excelAltUsedWithOtherKey &&
+        !shouldIgnoreShortcut()
+    ) {
+        excelKeyTipStage = 'ALT';
+        excelKeyTipAt = performance.now();
+    }
+
+    excelAltDown = false;
+    excelAltUsedWithOtherKey = false;
+
+}, true);
+
 
   function comboFromEvent(e) {
     const parts = [];
@@ -154,8 +268,8 @@
   // Visible startup marker: if this never appears after a Sheet reload,
   // the content script is not being injected (wrong extension folder/site access).
   function showLoadedMarker() {
-    try { toast('Jeff Fast v0.6: active', 'info', 1600); } catch (_) {}
-  }
+    try { toast('Jeff Fast v0.9: active', 'info', 1600); } catch (_) {}
+  }  
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(showLoadedMarker, 350), {once: true});
   } else {
@@ -267,8 +381,9 @@
   }
 
   window.addEventListener('keydown', (e) => {
+    if (maybeHandleExcelAltAT(e)) return;
     if (maybeHandlePrecedent(e)) return;
-    if (maybeHandleBridge(e)) return;
+    if (maybeHandleBridge(e)) return;  
 
     // Keep ordinary F1 disabled when enabled, matching the XLAM behavior.
     if (f1Blocked && e.code === 'F1' && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {

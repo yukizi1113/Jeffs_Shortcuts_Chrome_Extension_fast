@@ -141,10 +141,16 @@ async function runJeff(command, ctx, sender) {
     case '54': return changeDecimals(env, -1);
     case '55': return changeDecimals(env, 1);
     case '59': return {toast: 'Jeff Fast: Chrome拡張版。Apps Scriptを介さず、全Google Sheetsで動作します。'};
-    case 'PRECEDENT': return jumpToPrecedent(env);
-    case 'EXCEL_NUMBER': return excelNumberFormat(env);
-    case 'EXCEL_PERCENT': return excelPercentFormat(env);
-    default: throw new Error('未定義のJeffコマンド: ' + command);
+    case 'PRECEDENT':
+      return jumpToPrecedent(env);
+    case 'FILTER_TOGGLE':
+      return toggleBasicFilter(env);
+    case 'EXCEL_NUMBER':
+      return excelNumberFormat(env);
+    case 'EXCEL_PERCENT':
+      return excelPercentFormat(env);
+    default:
+      throw new Error('未定義のJeffコマンド: ' + command);
   }
 }
 
@@ -301,6 +307,77 @@ async function setFormat(env, format, fields) {
 async function clearFormatField(env, field) {
   await batchUpdate(env.ctx.spreadsheetId, [{repeatCell: {range: env.grid, cell: {userEnteredFormat: {}}, fields: field}}]);
   return null;
+}
+// ============================================================
+// Google Sheets: filter toggle
+// Windows Excel Alt -> A -> T equivalent
+// ============================================================
+
+async function toggleBasicFilter(env) {
+
+    const spreadsheetId = env.ctx.spreadsheetId;
+    const sheetId = Number(env.grid.sheetId);
+
+    // 現在このシートにBasic Filterが存在するか確認
+    const fields = encodeURIComponent(
+        'sheets(properties(sheetId),basicFilter)'
+    );
+
+    const url =
+        `https://sheets.googleapis.com/v4/spreadsheets/` +
+        `${encodeURIComponent(spreadsheetId)}?fields=${fields}`;
+
+    const meta = await apiFetch(url);
+
+    const sheet = (meta?.sheets || []).find(
+        s => Number(s?.properties?.sheetId) === sheetId
+    );
+
+    // すでにフィルターがある場合 → 解除
+    if (sheet?.basicFilter) {
+
+        await batchUpdate(
+            spreadsheetId,
+            [
+                {
+                    clearBasicFilter: {
+                        sheetId: sheetId
+                    }
+                }
+            ]
+        );
+
+        return {
+            toast: 'フィルターを解除しました。'
+        };
+    }
+
+    // フィルターがない場合
+    // 現在選択している範囲にフィルターを設定
+    const range = {
+        sheetId: sheetId,
+        startRowIndex: env.grid.startRowIndex,
+        endRowIndex: env.grid.endRowIndex,
+        startColumnIndex: env.grid.startColumnIndex,
+        endColumnIndex: env.grid.endColumnIndex
+    };
+
+    await batchUpdate(
+        spreadsheetId,
+        [
+            {
+                setBasicFilter: {
+                    filter: {
+                        range: range
+                    }
+                }
+            }
+        ]
+    );
+
+    return {
+        toast: '選択範囲にフィルターを設定しました。'
+    };
 }
 
 //
